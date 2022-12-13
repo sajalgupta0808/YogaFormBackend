@@ -13,21 +13,19 @@ app.use(express.json())
 
 const PORT = process.env.PORT || 8081
 
-
-
 // API's
 app.get('/', (req, resp) => {
     resp.send('Hello World')
 })
 
 // login api
-app.post('/api/login', async (req, resp) => {
+app.post('/api/login', async(req, resp) => {
     const { email, password } = req.body
 
     const user = await user.findOne({ email })
-    const passwordCorrect = user === null
-        ? false
-        : await bcrypt.compare(password, user.passwordHash)
+    const passwordCorrect = user === null ?
+        false :
+        await bcrypt.compare(password, user.passwordHash)
 
     if (!(user && passwordCorrect)) {
         return response.status(401).json({
@@ -43,7 +41,7 @@ app.post('/api/login', async (req, resp) => {
 // get data
 //member id: user data dashboard
 
-app.post('/api/register', async (req, resp) => {
+app.post('/api/register', async(req, resp) => {
     const { name, email, age, joiningDate, batch, password } = req.body
 
     const saltRounds = 10
