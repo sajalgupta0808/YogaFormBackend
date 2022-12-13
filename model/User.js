@@ -26,7 +26,10 @@ const userSchema = new mongoose.Schema({
         default: -1,  // -1: not a member, 0: 1 batch and so on, 1
     },
     joiningDate: Date,
-    lastPaidMonth: Date,
+    lastPaidMonth: {
+        type: Date,
+        default: new Date(1888, 1, 1)
+    },
 })
 
 userSchema.set('toJSON', {

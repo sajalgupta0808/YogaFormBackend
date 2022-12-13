@@ -13,62 +13,79 @@ app.use(express.json())
 
 const PORT = process.env.PORT || 8081
 
+
+
 // API's
-app.get('/', (req, resp) => {
-    resp.send('Hello World')
+app.get('/', (req, res) => {
+    res.send('Server running')
 })
 
 // login api
-app.post('/api/login', async(req, resp) => {
+app.post('/api/login', async (req, res) => {
     const { email, password } = req.body
 
-    const user = await user.findOne({ email })
-    const passwordCorrect = user === null ?
-        false :
-        await bcrypt.compare(password, user.passwordHash)
+    const User = await user.findOne({ email })
+    const passwordCorrect = User === null
+        ? false
+        : await bcrypt.compare(password, User.passwordHash)
 
-    if (!(user && passwordCorrect)) {
-        return response.status(401).json({
+    if (!(User && passwordCorrect)) {
+        return res.status(401).json({
             error: 'invalid username or password'
         })
     }
 
-    response
-        .status(200)
-        .send("Logged in")
+    res.status(200)
+        .json(User)
 })
 
-// get data
-//member id: user data dashboard
+app.post('/api/batchChange', async (req, res) => {
+    const { newBatch, id } = req.body
 
-app.post('/api/register', async(req, resp) => {
-    const { name, email, age, joiningDate, batch, password } = req.body
+    const User = await user.findById(id)
+    User.batch = newBatch
+    User.lastPaidMonth = Date.now()
+    const savedUser = await User.save()
+    res.status(200).json({ success: true, user: savedUser })
+})
 
+app.get('/api/getUser/:id', async (req, res) => {
+
+    const User = await user.findById(req.params.id)
+
+    if (User === null) {
+        res.status(404).json({ error: 'User not found' })
+    }
+    res.status(200).json({ user: User })
+})
+
+app.post('/api/register', async (req, res) => {
+    const { name, email, age, batch, password } = req.body
     const saltRounds = 10
     const passwordHash = await bcrypt.hash(password, saltRounds)
 
-    const user = new user({
+    const User = new user({
         name,
         email,
         age,
-        joiningDate,
+        joiningDate: Date.now(),
         batch,
         passwordHash,
     })
 
-    const savedUser = await user.save()
+    const savedUser = await User.save()
 
-    response.status(201).json(savedUser)
+    res.status(201).json(savedUser)
 })
 
 app.listen(PORT)
 
 // Error handling middleware
-const unknownEndpoint = (req, resp) => {
-    resp.status(404).send({ error: 'unknown endpoint' })
+const unknownEndpoint = (req, res) => {
+    res.status(404).send({ error: 'unknown endpoint' })
 }
 
-const errorHandler = (error, request, response, next) => {
+const errorHandler = (error, req, res, next) => {
     console.error(error.message)
 
     if (error.name === 'CastError') {
